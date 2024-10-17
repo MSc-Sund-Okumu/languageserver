@@ -72,7 +72,7 @@ service CompletionHelper {
 			snippet[0] = "outputPort"
 			snippet[0].body = "outputPort ${1:PortName} {\n\tLocation: $2\n\tProtocol: $3\n\tInterfaces: $4\n}"
 			snippet[1] = "inputPort"
-			snippet[1].body = "inputPort ${1:PortName {\n\tLocation: $2\n\tProtocol: $3\n\tInterfaces: $4\n}"
+			snippet[1].body = "inputPort ${1:PortName} {\n\tLocation: $2\n\tProtocol: $3\n\tInterfaces: $4\n}"
 			snippet[2] = "interface"
 			snippet[2].body = "interface ${1:interfaceName} {\n\tRequestResponse: $2\n\tOneWay: $3\n}"
 			snippet[3] = "main"
