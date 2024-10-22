@@ -124,7 +124,7 @@ service CompletionHelper {
 			snippet[26] = "global"
 			snippet[26].body = "global.${0:varName}"
 			snippet[27] = "execution"
-			snippet[27].body = "execution{ ${1:|single,concurrent,sequential|} }"
+			snippet[27].body = "execution{ ${1|single,concurrent,sequential|} }"
 			snippet[28] = "define"
 			snippet[28].body = "define ${1:procedureName}\n{\n\t$2\n}"
 			snippet[29] = "embedded"
