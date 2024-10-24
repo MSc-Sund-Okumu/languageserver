@@ -29,6 +29,7 @@ from file import File
 from exec import Exec
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import TextDocumentInterface, UtilsInterface, CompletionHelperInterface, InspectionUtilsInterface, GlobalVariables
+//from .code-actions import CodeActions
 
 constants {
 	INTEGER_MAX_VALUE = 2147483647,
@@ -73,6 +74,7 @@ service TextDocument {
 	embed Runtime as Runtime
 	embed Inspector as Inspector
 	embed File as File
+	//embed CodeActions as CodeActions
 
 	inputPort TextDocumentInput {
 		location: "local"
@@ -554,5 +556,39 @@ service TextDocument {
 				}
 			}
 		}]
+		[ codeAction( CodeActionParams )(codeActionResponse) {
+			println@Console( "codeAction received")()
+			valueToPrettyString@StringUtils( CodeActionParams )( CodeActionParams_string )
+			println@Console("Code Action Params: " + CodeActionParams_string)()
+			
+			codeActionResponse._[0] << {
+				title = "test action"
+				kind = "refactor"
+				isPreferred = true
+				command << {
+					title = "test command"
+					command = "touch"
+					arguments[0] = "/tmp/uwu"
+				}
+			}
+			
+			//codeActionResponse = "uwu"
+			valueToPrettyString@StringUtils( codeActionResponse )( codeActionResponse_string )
+			println@Console("Code Action Response: " + codeActionResponse_string)()
+			/*
+			type CodeAction {
+			title: string
+			kind?: CodeActionKind
+			diagnostics*: Diagnostic
+			isPreferred?: bool
+			disabled? {
+				reason: string
+			}
+			edit?: undefined //TODO FIX THIS!!!!!
+			command?: Command
+			data?: undefined
+		} 
+		*/
+		} ]
 	}
 }
