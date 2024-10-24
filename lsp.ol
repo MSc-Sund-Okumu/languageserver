@@ -1149,8 +1149,7 @@ type ServerCapabilities {
 	referencesProvider?: undefined //TODO see LSP specification
 	documentHighlightProvider?: bool
 	documentSymbolProvider?: bool
-	codeActionProvider?: bool
-	codeLensProvider?: CodeLensOptions
+	codeActionProvider?: bool | CodeActionOptions
 	documentFormattingProvider?: bool
 	documentRangeFormattingProvider?: bool
 	documentOnTypeFormattingProvider?: DocumentOnTypeFormattingOptions
@@ -1312,6 +1311,42 @@ type CodeLensOptions {
 	 * Code lens has a resolve provider as well
 	 */
 	resolveProvider?: bool
+}
+type CodeAction {
+	title: string
+	kind?: CodeActionKind
+	diagnostics*: Diagnostic
+	isPreferred?: bool
+	disabled? {
+		reason: string
+	}
+	edit?: undefined //TODO FIX THIS!!!!!
+	command?: Command
+	data?: undefined
+}
+
+type CodeActionOptions {
+	/*
+	 * Code Action has a resolve provider as well
+	 */
+	codeActionKinds*: CodeActionKind
+	resolveProvider?: bool
+}
+
+type CodeActionParams {
+	textDocument: TextDocumentIdentifier
+	range: Range
+	context: CodeActionContext
+}
+
+type CodeActionContext {
+	diagnostics*: Diagnostic
+	only*: CodeActionKind
+	triggerKind?: int 
+	/*
+	 *	CodeActionTriggerKind: 1 = Invoked
+	 *						   2 = Automatic
+	 */
 }
 type SignatureHelpOptions {
 	/*
@@ -1953,6 +1988,9 @@ interface GlobalVariables {
 		getRootUri(void)(DocumentUri)
 }
 
+type codeActionResponse {
+	_*: Command | CodeAction
+} | void
 interface TextDocumentInterface {
 	OneWay:
 		didOpen( DidOpenTextDocumentParams ),
@@ -1967,7 +2005,8 @@ interface TextDocumentInterface {
 		documentSymbol( DocumentSymbolParams )( DocumentSymbolResult ),
 		signatureHelp( TextDocumentPositionParams )( SignatureHelpResponse ), //TODO check LSP
 		definition(TextDocumentPositionParams)(DefinitionResponse),
-		rename(RenameRequest)(RenameResponse)
+		rename(RenameRequest)(RenameResponse),
+		codeAction(CodeActionParams)(codeActionResponse)
 }
 
 interface WorkspaceInterface {

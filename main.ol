@@ -54,7 +54,7 @@ service Main(params:Params) {
 
 	inputPort Input {
 		location: params.location
-		protocol: jsonrpc { //.debug = true
+		protocol: jsonrpc { .debug = true
 			clientLocation -> global.clientLocation
 			clientOutputPort = "Client"
 			transport = "lsp"
@@ -74,6 +74,7 @@ service Main(params:Params) {
 			osc.signatureHelp.alias = "textDocument/signatureHelp"
 			osc.definition.alias = "textDocument/definition"
 			osc.rename.alias = "textDocument/rename"
+			osc.codeAction.alias = "textDocument/codeAction"
 			osc.didChangeWatchedFiles.alias = "workspace/didChangeWatchedFiles"
 			osc.didChangeWorkspaceFolders.alias = "workspace/didChangeWorkspaceFolders"
 			osc.didChangeConfiguration.alias = "workspace/didChangeConfiguration"
@@ -148,6 +149,10 @@ service Main(params:Params) {
 				//experimental;
 				workspaceSymbolProvider = true
 				renameProvider = true
+				codeActionProvider << {
+					codeActionKinds[0] = "refactor"
+					resolveProvider = true
+				}
 			}
 		}]
 
