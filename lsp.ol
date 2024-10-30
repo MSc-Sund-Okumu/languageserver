@@ -1958,14 +1958,93 @@ type RenameRequest {
 
 // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workspaceEdit
 // workspaceEdit
-/* type WorkspaceEditResponse {
+ type WorkspaceEdit {
 	changes? {
-		_uri*: DocumentUri {
-			_textEdit*: TextEdit
+		uri*: string /*DocumentUri type can't be used for some reason*/ {
+			_*: TextEdit
 		}
 	}
-} */
+	documentChanges? { /* doesn't work but should be here
+		_* TextDocumentEdit
+	} | { */
+		_*:  CreateFile | RenameFile | DeleteFile | TextDocumentEdit
+	}
+	changeAnnotations? {
+		id*: string {
+			_*: ChangeAnnotation
+		}
+	}
+} 
 
+type TextDocumentEdit {
+	textDocument: OptionalVersionedTextDocumentIdentifier
+	edits {
+		_*: TextEdit | AnnotatedTextEdit
+	}
+}
+
+type OptionalVersionedTextDocumentIdentifier {
+	uri: DocumentUri //extended from textDocumentIdentifier
+	version: int | void
+}
+type VersionedTextDocumentIdentifier {
+	uri: DocumentUri //extended from textDocumentIdentifier
+	version: int
+}
+
+
+type AnnotatedTextEdit { 
+	//range and newText extended from TextEdit
+	range: Range 
+	newText: string
+
+	annotationId: ChangeAnnotationIdentifier
+}
+
+type ChangeAnnotationIdentifier: string
+
+type ChangeAnnotation {
+	label: string
+	needsConfirmation?: bool
+	description?: string
+}
+
+type CreateFile {
+	kind: string //= "create"
+	uri: DocumentUri
+	options?: CreateFileOptions
+	annotationId?: ChangeAnnotationIdentifier	
+}
+
+type CreateFileOptions {
+	overwrite?: bool
+	ignoreIfExists?: bool
+}
+
+type RenameFile {
+	kind: string //= "rename"
+	oldUri: DocumentUri
+	newUri: DocumentUri
+	options?: RenameFileOptions
+	annotationId?: ChangeAnnotationIdentifier
+}
+
+type RenameFileOptions {
+	overwrite?: bool
+	ignoreIfExists?: bool
+}
+
+type DeleteFile {
+	kind: string //= "delete"
+	uri: DocumentUri
+	options?: DeleteFileOptions
+	annotationId?: ChangeAnnotationIdentifier
+}
+
+type DeleteFileOptions {
+	recursive?: bool
+	ignoreIfNotExists?: bool
+}
 //should be WorkspaceEditResponse
 type RenameResponse: undefined | void
 

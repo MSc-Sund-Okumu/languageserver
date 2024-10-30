@@ -82,10 +82,12 @@ service Workspace {
 
 		[ executeCommand( commandParams )( commandResult ) {
 			println@Console("executeCommand received")()
-			cmd -> commandParams.commandParams
+			valueToPrettyString@StringUtils( commandParams )(res)
+			println@Console("executeCommand: commandParams received " + res)()
+			cmd -> commandParams.command
 			args -> commandParams.arguments
 			command = cmd
-			command.args = args
+			//command.args = args
 			exec@Exec( command )( commandResult )
 		}]
 
