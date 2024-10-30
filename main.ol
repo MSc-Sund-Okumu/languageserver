@@ -146,6 +146,9 @@ service Main(params:Params) {
 				referenceProvider = false
 				//experimental;
 				workspaceSymbolProvider = true
+				executeCommandProvider << {
+					commands[0] = "touch"
+				}
 				renameProvider = true
 				codeActionProvider << {
 					codeActionKinds[0] = "refactor"

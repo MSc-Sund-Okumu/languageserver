@@ -556,21 +556,71 @@ service TextDocument {
 				}
 			}
 		}]
-		[ codeAction( CodeActionParams )(codeActionResponse) {
+		[ codeAction( codeActionParams )(codeActionResponse) {
 			println@Console( "codeAction received")()
-			valueToPrettyString@StringUtils( CodeActionParams )( CodeActionParams_string )
+			valueToPrettyString@StringUtils( codeActionParams )( CodeActionParams_string )
 			println@Console("Code Action Params: " + CodeActionParams_string)()
+			
+			thisFile -> codeActionParams.textDocument.uri
+			
+			valueToPrettyString@StringUtils( thisFile )( thisFile_string )
+			println@Console("Code Action Params thisFile: " + thisFile_string)()
+			thisRange -> codeActionParams.range
 			
 			codeActionResponse._[0] << {
 				title = "test action"
 				kind = "refactor"
 				isPreferred = true
+				/*
 				command << {
 					title = "test command"
 					command = "touch"
 					arguments[0] = "/tmp/uwu"
 				}
+				*/
+				edit << {
+					changes << {
+						uri[0] = thisFile {
+							//_[0] = thisRange
+							newText = "service TestService {\n}"
+						}
+						uri[1] = "thisFile" {
+							//_[0] = thisRange
+							newText = "service TestService {\n}"
+						}
+					}
+				}
+				/*
+					type WorkspaceEdit {
+						changes? {
+							uri*: string DocumentUri type can't be used for some reason {
+								_*: TextEdit
+							}
+						}
+						documentChanges? {  doesn't work but should be here
+							_* TextDocumentEdit
+						} | { 
+							_*:  CreateFile | RenameFile | DeleteFile | TextDocumentEdit
+						}
+						changeAnnotations? {
+							id*: string {
+								_*: ChangeAnnotation
+							}
+						}
+					}
+					*/
 			}
+			inspectionReq << {
+				filename = "/home/kasper/Documents/build/jolie/vscode-jolie/node_modules/@jolie/languageserver/launcher.ol"
+				//source = request.text
+				//includePaths[0] = jHome + fs + "include"
+				//includePaths[1] = documentPath
+			}
+			
+			println@Console("Trying to run inspectFile")()
+			inspectFile@Inspector( inspectionReq )( inspectionRes )
+			valueToPrettyString@StringUtils(inspectionRes)(pretty)
+
 			
 			//codeActionResponse = "uwu"
 			valueToPrettyString@StringUtils( codeActionResponse )( codeActionResponse_string )
