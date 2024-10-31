@@ -212,7 +212,7 @@ type ServerCapabilities {
 	completionProvider?: CompletionOptions
 	signatureHelpProvider?: SignatureHelpOptions
 	definitionProvider?: bool
-	typeDefinitionProvider?: undefined //TODO see LSP specification
+	typeDefinitionProvider?: bool //TODO, add other possible types, see LSP specification
 	implementationProvider?: undefined //TODO see LSP specification
 	referenceProvider?: undefined //TODO see LSP specification
 	documentHighlightProvider?: bool
@@ -1081,10 +1081,28 @@ type CompletionKeywordResult: any {
 	result*:CompletionItem
 }
 
+type TypeDefinitionResponse: Location | void | {
+	_*: Location
+}
+
+type TypeDefinitionParams {
+	textDocument: TextDocumentIdentifier
+	position: Position
+	workDoneToken?: ProgressToken
+	partialResultToken?: ProgressToken
+}
+
+type ProgressToken: int | string
+
 interface CompletionHelperInterface {
 	RequestResponse:
 		completionOperation(CompletionOperationRequest)(CompletionOperationResult),
 		completionKeywords(CompletionKeywordRequest)(CompletionKeywordResult),
 		completionImportModule(CompletionImportModuleRequest)(CompletionImportModuleResult),
 		completionImportSymbol(CompletionImportSymbolRequest)(CompletionImportSymbolResult)
+}
+
+interface GotoUtilsInterface {
+	RequestResponse:
+		typeDefinition(TypeDefinitionParams)(TypeDefinitionResponse)
 }

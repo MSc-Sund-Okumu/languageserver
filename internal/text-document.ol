@@ -30,6 +30,7 @@ from exec import Exec
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import TextDocumentInterface, UtilsInterface, CompletionHelperInterface, InspectionUtilsInterface, GlobalVariables
 //from .code-actions import CodeActions
+from .go-to-utils import GotoUtils
 
 constants {
 	INTEGER_MAX_VALUE = 2147483647,
@@ -74,8 +75,9 @@ service TextDocument {
 	embed Runtime as Runtime
 	embed Inspector as Inspector
 	embed File as File
+	//embed GotoUtils as GotoUtils
 	//embed CodeActions as CodeActions
-
+	
 	inputPort TextDocumentInput {
 		location: "local"
 		interfaces: TextDocumentInterface
@@ -697,5 +699,11 @@ service TextDocument {
 		} 
 		*/
 		} ]
+
+		/*
+		[ typeDefinition( typeDefinitionParams )( typeDefinitionResponse ){
+			//TODO aggregate instead
+			typeDefinition@GotoUtils( typeDefinitionParams )( typeDefinitionResponse )
+		}] */
 	}
 }

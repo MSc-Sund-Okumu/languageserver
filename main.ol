@@ -74,6 +74,7 @@ service Main(params:Params) {
 			osc.definition.alias = "textDocument/definition"
 			osc.rename.alias = "textDocument/rename"
 			osc.codeAction.alias = "textDocument/codeAction"
+			//osc.typeDefinition.alias = "textDocument/typeDefinition"
 			osc.didChangeWatchedFiles.alias = "workspace/didChangeWatchedFiles"
 			osc.didChangeWorkspaceFolders.alias = "workspace/didChangeWorkspaceFolders"
 			osc.didChangeConfiguration.alias = "workspace/didChangeConfiguration"
@@ -154,6 +155,7 @@ service Main(params:Params) {
 					codeActionKinds[0] = "refactor"
 					resolveProvider = true
 				}
+				typeDefinitionProvider = true
 			}
 		}]
 
