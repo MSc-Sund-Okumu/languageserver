@@ -566,11 +566,18 @@ service TextDocument {
 			valueToPrettyString@StringUtils( thisFile )( thisFile_string )
 			println@Console("Code Action Params thisFile: " + thisFile_string)()
 			thisRange -> codeActionParams.range
+			valueToPrettyString@StringUtils( thisRange )( thisRange_string )
+			println@Console("Code Action Params thisFile: " + thisRange_string)()
+
+			testAnnotationId = new
 			
 			codeActionResponse._[0] << {
 				title = "test action"
-				kind = "refactor"
-				isPreferred = true
+				kind = "quickfix"
+				//isPreferred = false
+				//disabled << {
+				//	reason = "BOT DIFF"
+				//}
 				/*
 				command << {
 					title = "test command"
@@ -578,18 +585,63 @@ service TextDocument {
 					arguments[0] = "/tmp/uwu"
 				}
 				*/
+
 				edit << {
-					changes << {
-						uri[0] = thisFile {
-							//_[0] = thisRange
-							newText = "service TestService {\n}"
+					/*
+					changes.(thisFile)[0] << {
+							range << thisRange
+							newText = "\n\nservice TestService {\n}"
 						}
-						uri[1] = "thisFile" {
-							//_[0] = thisRange
-							newText = "service TestService {\n}"
+					changes.(thisFile)[1] << {
+							range << {
+								start << {
+									line = 0
+									character = 0
+								}
+								end << {
+									line = 0
+									character = 0
+								}
+							}
+							newText = ""
+						}
+					} 
+					*/
+					documentChanges[0] << {
+						textDocument << {
+							uri = thisFile
+							version = void
+						}
+						edits[0] << {
+							range << thisRange
+							newText = "\n\nservice Service {\n}"
+							annotationId = testAnnotationId
+						}
+						edits[1] << {
+							range << {
+								start << {
+									line = 0
+									character = 0
+								}
+								end << {
+									line = 0
+									character = 0
+								}
+							}
+							newText = ""
 						}
 					}
+					
+					
+					changeAnnotations.(testAnnotationId) << {
+						label = "Bot DIFF"
+						needsConfirmation = true
+						description = "This is the time in a normal day when you meet Gumayusi in bot lane and get diffed very hard"
+					}
+					
 				}
+			}
+
 				/*
 					type WorkspaceEdit {
 						changes? {
@@ -608,10 +660,13 @@ service TextDocument {
 							}
 						}
 					}
-					*/
+					
 			}
+			*/
+
+			/*
 			inspectionReq << {
-				filename = "/home/kasper/Documents/build/jolie/vscode-jolie/node_modules/@jolie/languageserver/launcher.ol"
+				filename = "/home/anders/thesis/vscode-jolie/node_modules/@jolie/languageserver/internal/text-document"
 				//source = request.text
 				//includePaths[0] = jHome + fs + "include"
 				//includePaths[1] = documentPath
@@ -620,6 +675,8 @@ service TextDocument {
 			println@Console("Trying to run inspectFile")()
 			inspectFile@Inspector( inspectionReq )( inspectionRes )
 			valueToPrettyString@StringUtils(inspectionRes)(pretty)
+			println@Console("inpect file response: " + pretty)()
+			*/
 
 			
 			//codeActionResponse = "uwu"

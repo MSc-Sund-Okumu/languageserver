@@ -1320,7 +1320,7 @@ type CodeAction {
 	disabled? {
 		reason: string
 	}
-	edit?: undefined //TODO FIX THIS!!!!!
+	edit?: WorkspaceEdit
 	command?: Command
 	data?: undefined
 }
@@ -1959,28 +1959,36 @@ type RenameRequest {
 // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workspaceEdit
 // workspaceEdit
  type WorkspaceEdit {
-	changes? {
-		uri*: string /*DocumentUri type can't be used for some reason*/ {
+	changes?: undefined //To accomplish some sort of map 
+
+		/* Descriptive Type not supported in Jolie for maps.
+		uri*: string /*DocumentUri type can't be used for some reason {
 			_*: TextEdit
-		}
-	}
-	documentChanges? { /* doesn't work but should be here
+		} */
+	documentChanges*: undefined//CreateFile | RenameFile | DeleteFile | TextDocumentEdit
+	/* documentChanges? {  doesn't work but should be here
 		_* TextDocumentEdit
-	} | { */
+	} | { 
 		_*:  CreateFile | RenameFile | DeleteFile | TextDocumentEdit
-	}
-	changeAnnotations? {
+	} */
+	changeAnnotations?: undefined 
+		/*
+		{
 		id*: string {
 			_*: ChangeAnnotation
 		}
-	}
+		*/
+	
 } 
 
 type TextDocumentEdit {
 	textDocument: OptionalVersionedTextDocumentIdentifier
+	edits*: TextEdit | AnnotatedTextEdit
+	/*
 	edits {
 		_*: TextEdit | AnnotatedTextEdit
 	}
+	*/
 }
 
 type OptionalVersionedTextDocumentIdentifier {
