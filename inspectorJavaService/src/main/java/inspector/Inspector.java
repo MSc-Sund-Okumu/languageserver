@@ -426,6 +426,27 @@ public class Inspector extends JavaService {
 	}
 
 	/**
+	 * Finds the position where the either type of an operation is defined.
+	 */
+	@RequestResponse
+	public Value inspectionToTypeDefinitionLink(Value request) {
+		// Unpack request
+		String currentFile = request.getFirstChild("textDocument").getFirstChild("uri").strValue();
+		int column = request.getFirstChild("position").getFirstChild("character").intValue();
+		int line = request.getFirstChild("position").getFirstChild("line").intValue();
+		String rootUri = request.getFirstChild("rootUri").strValue();
+		getInspector(filename, )
+		
+		// FindWordWeAreLookingFor
+
+		// Get interface type of that word
+		
+		// Return Position with context maybe
+
+		
+	}
+
+	/**
 	 * Some calls from the client only provide the position in the current file
 	 * and therefore we need to manually determine what the word we are looking for is
 	 * @param currentFile

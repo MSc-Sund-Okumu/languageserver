@@ -30,7 +30,7 @@ from exec import Exec
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import TextDocumentInterface, UtilsInterface, CompletionHelperInterface, InspectionUtilsInterface, GlobalVariables
 //from .code-actions import CodeActions
-from .go-to-utils import GotoUtils
+//from .go-to-utils import GotoUtils
 
 constants {
 	INTEGER_MAX_VALUE = 2147483647,
@@ -700,10 +700,10 @@ service TextDocument {
 		*/
 		} ]
 
-		/*
 		[ typeDefinition( typeDefinitionParams )( typeDefinitionResponse ){
 			//TODO aggregate instead
-			typeDefinition@GotoUtils( typeDefinitionParams )( typeDefinitionResponse )
-		}] */
+			println@Console("inside typeDefinition")()
+			
+		}]
 	}
 }

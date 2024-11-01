@@ -936,6 +936,23 @@ type ChangeAnnotation {
 	description?: string
 }
 
+type TypeDefinitionResponse: undefined
+
+/* Not allowed for some reason
+type TypeDefinitionResponse: Location | void | {
+	_*: Location
+}
+*/
+
+type TypeDefinitionParams {
+	textDocument: TextDocumentIdentifier
+	position: Position
+	workDoneToken?: ProgressToken
+	partialResultToken?: ProgressToken
+}
+
+type ProgressToken: int | string
+
 type CreateFile {
 	kind: string //= "create"
 	uri: DocumentUri
@@ -1007,7 +1024,8 @@ interface TextDocumentInterface {
 		signatureHelp( TextDocumentPositionParams )( SignatureHelpResponse ),
 		definition(TextDocumentPositionParams)(DefinitionResponse),
 		rename(RenameRequest)(RenameResponse),
-		codeAction(CodeActionParams)(codeActionResponse)
+		codeAction(CodeActionParams)(codeActionResponse),
+		typeDefinition(TypeDefinitionParams)(TypeDefinitionResponse)
 }
 
 interface WorkspaceInterface {
@@ -1081,18 +1099,7 @@ type CompletionKeywordResult: any {
 	result*:CompletionItem
 }
 
-type TypeDefinitionResponse: Location | void | {
-	_*: Location
-}
 
-type TypeDefinitionParams {
-	textDocument: TextDocumentIdentifier
-	position: Position
-	workDoneToken?: ProgressToken
-	partialResultToken?: ProgressToken
-}
-
-type ProgressToken: int | string
 
 interface CompletionHelperInterface {
 	RequestResponse:
@@ -1100,9 +1107,4 @@ interface CompletionHelperInterface {
 		completionKeywords(CompletionKeywordRequest)(CompletionKeywordResult),
 		completionImportModule(CompletionImportModuleRequest)(CompletionImportModuleResult),
 		completionImportSymbol(CompletionImportSymbolRequest)(CompletionImportSymbolResult)
-}
-
-interface GotoUtilsInterface {
-	RequestResponse:
-		typeDefinition(TypeDefinitionParams)(TypeDefinitionResponse)
 }
