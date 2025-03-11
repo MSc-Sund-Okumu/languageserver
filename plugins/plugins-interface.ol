@@ -23,8 +23,7 @@
  * SOFTWARE.from console import Console
  */
 /*
- * Jolie types for the Language Server Protocol
- * see https://microsoft.github.io/language-server-protocol/specification
+ * Jolie types for the extensions to the language server
  */
 
 /*
@@ -33,9 +32,13 @@
 
 from ast import Module
 
+
+//type EventType: string( enum(["Service updated","Interface updated","..."]))
+
 type Observer {
     //example: "socket://localhost:12345"
     locationString: string
+    //eventType*: EventType
 }
 
 type WorkspaceModule {
@@ -51,21 +54,33 @@ type ObserverStatus {
     currentState: string //TODO change this
 }
 
+type WorkSpaceFiles {
+    fileURIs*: string 
+}
+/*
 //This is in discussion
 type NotificationMessage {
-    eventType: string( enum(["Service updated","Interface updated","..."]))
-    coordinates*: int|string //coordinates of the changes
+    //eventType: EventType
+    workspace: WorkspaceModule
 }
-
+*/
 interface RefactoringsInterface {
     RequestResponse:
-        addObserver(Observer)(ObserverStatus),
-        removeObserver(Observer)(ObserverStatus),
         parseWorkspace(void)(WorkspaceModule)
+ }
+
+interface ObserverInterface {
+    RequestResponse:
+        addObserver(Observer)(ObserverStatus),
+        removeObserver(Observer)(ObserverStatus)
     OneWay:
         //sends a NotificationMessage of to all observers
         notify(void)
- }
+}
 
+interface NotificationInterface {
+    OneWay:
+        update(WorkspaceModule)
+}
 
  

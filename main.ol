@@ -31,6 +31,7 @@ from .internal.utils import Utils
 from .internal.inspection-utils import InspectionUtils
 from .internal.completionHelper import CompletionHelper
 from .lsp import GeneralInterface, ServerToClient, GlobalVariables
+from .plugins.observer import ObserverSubject
 
 type Params {
 	location: string
@@ -51,6 +52,7 @@ service Main(params:Params) {
 	embed InspectionUtils
 	embed CompletionHelper
 	embed StringUtils as StringUtils
+	embed ObserverSubject
 
 	inputPort Input {
 		location: params.location

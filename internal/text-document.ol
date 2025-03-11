@@ -29,6 +29,7 @@ from file import File
 from exec import Exec
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import TextDocumentInterface, UtilsInterface, CompletionHelperInterface, InspectionUtilsInterface, GlobalVariables
+from ..plugins.observer import ObserverInterface
 
 constants {
 	INTEGER_MAX_VALUE = 2147483647,
@@ -99,6 +100,11 @@ service TextDocument {
 		interfaces: GlobalVariables
 	}
 
+	outputPort ObserverInput {
+		location: "local://Plugins/Observer"
+		interfaces: ObserverInterface
+	}
+
 	init {
 		println@Console( "txtDoc running" )()
 	}
@@ -145,12 +151,15 @@ service TextDocument {
 			getDocument@Utils( notification.textDocument.uri )( textDocument )
 			docModifications << {
 				text = textDocument.source
-				version = notification.textDocument.version
+				//version = notification.textDocument.version
 				uri = notification.textDocument.uri
 			}
-			updateDocument@Utils( docModifications )
+			//FIXME version is not send in didSave notification, so updateDocument doesn't work anyway
+			//updateDocument@Utils( docModifications )
 			//doc.path = notification.textDocument.uri
 			//syntaxCheck@SyntaxChecker( doc )
+			//notify observers that files have chag
+			notify@ObserverInput()
 		}
 
 		/*

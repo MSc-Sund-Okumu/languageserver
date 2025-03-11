@@ -29,7 +29,7 @@ from file import File
 from runtime import Runtime
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import WorkspaceInterface, GlobalVariables
-
+from ..plugins.observer import ObserverInterface
 service Workspace {
 	execution: concurrent
 
@@ -48,6 +48,11 @@ service Workspace {
 	outputPort GlobalVar{
 		location: "local://GlobalVar"
 		interfaces: GlobalVariables
+	}
+
+	outputPort ObserverInput {
+		location: "local://Plugins/Observer"
+		interfaces: ObserverInterface
 	}
 
 	init {
@@ -82,11 +87,21 @@ service Workspace {
 
 		[ executeCommand( commandParams )( commandResult ) {
 			println@Console("executeCommand received")()
-			cmd -> commandParams.commandParams
+			cmd -> commandParams.command
 			args -> commandParams.arguments
-			command = cmd
-			command.args = args
-			exec@Exec( command )( commandResult )
+
+			//check if the command is for the plugin 
+			startsWithRequest = cmd
+			startsWithRequest.prefix = "/plugin/addObserver"
+			startsWith@StringUtils(startsWithRequest)(result) 
+			if (result) {
+				addObserver@ObserverInput(args)(commandResult)
+			} else {
+				command = cmd
+				command.args = args
+				exec@Exec( command )( commandResult )
+			}
+			
 		}]
 
 		/* triggered by Ctrl+t
