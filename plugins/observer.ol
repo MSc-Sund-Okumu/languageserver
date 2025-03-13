@@ -42,7 +42,7 @@ service ObserverSubject {
     inputPort ObserverManagementPort {
         location: "socket://localhost:12345"//TODO
         protocol: http {
-            format = json
+            format = "json"
         }
         interfaces: ObserverInterface
     }
@@ -89,7 +89,32 @@ service ObserverSubject {
                     replacement = ""
                 }
                 replaceFirst@StringUtils(replaceRequest)(rootURI)
+
+                //Change encoding of spaces from "%20" to " "
+                replaceRequest << rootURI {
+                    regex = "%20"
+                    replacement = " "
+                }
+                replaceAll@StringUtils(replaceRequest)(rootURI)
                 
+                //Windows fix 
+                getFileSeparator@File()(fileSeparator)
+                if(fileSeparator == "\\") {
+                    //remove the first / "/c:/something/" -> c:/something/"
+                    replaceRequest << rootURI {
+                    regex = "/"
+                    replacement = ""
+                    }
+                    replaceFirst@StringUtils(replaceRequest)(rootURI)
+                    //remove the first / "/c:/something/" -> c:/something/"
+                    
+                    replaceRequest << rootURI {
+                    regex = "/"
+                    replacement = "\\\\"
+                    }
+                    replaceAll@StringUtils(replaceRequest)(rootURI)
+                    
+                }
                 listReq << {
                     regex = ".*\\.[oO][lL]$"
                     directory = rootURI
@@ -183,4 +208,3 @@ service ObserverSubject {
     }
 
 }
-
