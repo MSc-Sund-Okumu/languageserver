@@ -30,6 +30,8 @@ from runtime import Runtime
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import WorkspaceInterface, GlobalVariables
 from ..plugins.observer import ObserverInterface
+from ast import Ast
+
 service Workspace {
 	execution: concurrent
 
@@ -39,6 +41,8 @@ service Workspace {
 	embed File as File
 	embed Inspector as Inspector
 	embed Runtime as Runtime
+	embed Ast as Ast 
+	
 
 	inputPort WorkspaceInput {
 		location: "local"
@@ -93,9 +97,13 @@ service Workspace {
 			//check if the command is for the plugin 
 			startsWithRequest = cmd
 			startsWithRequest.prefix = "/plugin/addObserver"
-			startsWith@StringUtils(startsWithRequest)(result) 
-			if (result) {
+			startsWith@StringUtils(startsWithRequest)(isAddObserver)
+			startsWithRequest.prefix = "/plugin/resolveSymbol"
+			startsWith@StringUtils(startsWithRequest)(isResolveSymbol)
+			if (isAddObserver) {
 				addObserver@ObserverInput(args)(commandResult)
+			} else if (isResolveSymbol) {
+				resolveSymbol@Ast(args)(commandResult)
 			} else {
 				command = cmd
 				command.args = args
