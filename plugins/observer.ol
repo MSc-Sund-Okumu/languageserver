@@ -124,7 +124,23 @@ service ObserverSubject {
 
                 list@File(listReq)(listResp)
                 for(jolieFile in listResp.result) {
-                    uriPath = "file://" + jolieFile.info.absolutePath
+                    
+                    if (fileSeparator == "\\") {
+                        replaceRequest << jolieFile.info.absolutePath {
+                        regex = "\\\\"
+                        replacement = "/"
+                        }
+                        replaceAll@StringUtils(replaceRequest)(jolieFile.info.absolutePath)
+                        replaceRequest << jolieFile.info.absolutePath {
+                        regex = " "
+                        replacement = "%20"
+                        }
+                        replaceAll@StringUtils(replaceRequest)(jolieFile.info.absolutePath)
+                        uriPath = "file:///" + jolieFile.info.absolutePath
+                    } else {
+                        uriPath = "file://" + jolieFile.info.absolutePath
+                    }
+                    
                     println@Console("parsing: " + uriPath)()
                     parseModule@Ast(uriPath)(module)
                     // insert uriPath & module in aWorkspaceModule and send to all observers
