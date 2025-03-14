@@ -88,6 +88,7 @@ service ObserverSubject {
                     regex = "file://"
                     replacement = ""
                 }
+                
                 replaceFirst@StringUtils(replaceRequest)(rootURI)
 
                 //Change encoding of spaces from "%20" to " "
