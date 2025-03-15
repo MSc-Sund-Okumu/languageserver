@@ -79,10 +79,11 @@ service ObserverSubject {
             println@Console(pretty)()
             
             if(#global.observers.items > 0) {
-                //Parse all modules
-                println@Console("rootURI: " + rootURI)()
-                
+                //Parse all modules                
                 getRootUri@GlobalVar()(rootURI)
+
+                println@Console("rootURI: " + rootURI)()
+
                 //remove leading "file://" using replaceFirst
                 replaceRequest << rootURI {
                     regex = "file://"
@@ -119,11 +120,12 @@ service ObserverSubject {
                 listReq << {
                     regex = ".*\\.[oO][lL]$"
                     directory = rootURI
-                    recursive = false
+                    recursive = true
                     info = true
                 }
-
+                
                 list@File(listReq)(listResp)
+
                 for(jolieFile in listResp.result) {
                     
                     if (fileSeparator == "\\") {
