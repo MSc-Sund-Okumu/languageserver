@@ -6,6 +6,7 @@ from string-utils import StringUtils
 from .plugins-interface import ObserverUtilsInterface
 
 service ObserverUtils {
+    execution: concurrent
     embed Console as Console
     embed StringUtils as StringUtils
     embed File as File
