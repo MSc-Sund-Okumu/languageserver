@@ -71,11 +71,16 @@ interface RefactoringsInterface {
 
 interface ObserverInterface {
     RequestResponse:
-        addObserver(Observer)(ObserverStatus),
+        addObserver(Observer)(WorkspaceModule),
         removeObserver(Observer)(ObserverStatus)
     OneWay:
         //sends a NotificationMessage of to all observers
         notify(void)
+}
+
+interface ObserverUtilsInterface {
+    RequestResponse:
+        parseWorkspace(void)(WorkspaceModule)
 }
 
 interface NotificationInterface {

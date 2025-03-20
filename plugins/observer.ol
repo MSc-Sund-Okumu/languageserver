@@ -30,12 +30,12 @@
  * @author Kasper Okoyo Okumu
  */
 from .plugins-interface import ObserverInterface, NotificationInterface
-from ..lsp import GlobalVariables
+from .observerUtils import ObserverUtils
+
 from vectors import Vectors
 from console import Console
-from file import File
-from ast import Ast
 from string-utils import StringUtils
+
 
 service ObserverSubject {
     execution: sequential
@@ -52,10 +52,7 @@ service ObserverSubject {
 		interfaces: ObserverInterface
 	}
 
-    outputPort GlobalVar {
-		location: "local://GlobalVar"
-		interfaces: GlobalVariables
-	}
+    
 
     outputPort NotificationPort {
         // set location dynamically
@@ -64,14 +61,11 @@ service ObserverSubject {
         }
         interfaces: NotificationInterface
     }
-
+    embed ObserverUtils as ObserverUtils
     embed Vectors as Vectors
     embed Console as Console
     embed StringUtils as StringUtils
-    embed File as File
-    embed Ast as Ast
     
-
     main {
         [notify()] {
             println@Console("inside notify")()
@@ -79,86 +73,9 @@ service ObserverSubject {
             println@Console(pretty)()
             
             if(#global.observers.items > 0) {
-                //Parse all modules                
-                getRootUri@GlobalVar()(rootURI)
-
-                println@Console("rootURI: " + rootURI)()
-
-                //remove leading "file://" using replaceFirst
-                replaceRequest << rootURI {
-                    regex = "file://"
-                    replacement = ""
-                }
                 
-                replaceFirst@StringUtils(replaceRequest)(rootURI)
-
-                //Change encoding of spaces from "%20" to " "
-                replaceRequest << rootURI {
-                    regex = "%20"
-                    replacement = " "
-                }
-                replaceAll@StringUtils(replaceRequest)(rootURI)
+                parseWorkspace@ObserverUtils()(notification)
                 
-                //Windows fix 
-                getFileSeparator@File()(fileSeparator)
-                if(fileSeparator == "\\") {
-                    //remove the first / "/c:/something/" -> c:/something/"
-                    replaceRequest << rootURI {
-                    regex = "/"
-                    replacement = ""
-                    }
-                    replaceFirst@StringUtils(replaceRequest)(rootURI)
-                    //remove the first / "/c:/something/" -> c:/something/"
-                    
-                    replaceRequest << rootURI {
-                    regex = "/"
-                    replacement = "\\\\"
-                    }
-                    replaceAll@StringUtils(replaceRequest)(rootURI)
-                    
-                }
-                listReq << {
-                    regex = ".*\\.[oO][lL]$"
-                    directory = rootURI
-                    recursive = true
-                    info = true
-                }
-                
-                list@File(listReq)(listResp)
-
-                for(jolieFile in listResp.result) {
-                    
-                    if (fileSeparator == "\\") {
-                        replaceRequest << jolieFile.info.absolutePath {
-                        regex = "\\\\"
-                        replacement = "/"
-                        }
-                        replaceAll@StringUtils(replaceRequest)(jolieFile.info.absolutePath)
-                        replaceRequest << jolieFile.info.absolutePath {
-                        regex = " "
-                        replacement = "%20"
-                        }
-                        replaceAll@StringUtils(replaceRequest)(jolieFile.info.absolutePath)
-                        uriPath = "file:///" + jolieFile.info.absolutePath
-                    } else {
-                        uriPath = "file://" + jolieFile.info.absolutePath
-                    }
-                    
-                    println@Console("parsing: " + uriPath)()
-                    parseModule@Ast(uriPath)(module)
-                    // insert uriPath & module in aWorkspaceModule and send to all observers
-                    
-                    modules[#modules] << {
-                        documentURI = uriPath
-                        module << module
-                    }
-                    valueToPrettyString@StringUtils(module)(pretty)
-                    println@Console(pretty)()
-                }
-                
-                notification << {
-                    modules << modules
-                }
                 // send the notification to observers
                 for(observer in global.observers.items) {
                     println@Console("inside notify for-loop")()
@@ -175,7 +92,7 @@ service ObserverSubject {
             
         }
 
-        [addObserver(Observer)(observerStatus) {
+        [addObserver(Observer)(workspace) {
             //consider checking for duplicates, or merging subscriber.event
             //critical section, ensure synchronization if using concurrent execution
             addRequest << {
@@ -185,15 +102,14 @@ service ObserverSubject {
             //valueToPrettyString@StringUtils(addRequest)(pretty)
             //println@Console(pretty)()
             add@Vectors(addRequest)(newObservers)
-
+            //TODO check if Observer is not already in global.observers to pre
             global.observers << newObservers
             //valueToPrettyString@StringUtils(global.observers)(pretty)
             //println@Console(pretty)()
-            observerStatus << {
-                status = 42 //TODO what is this??
-                message = "added Observer" 
-                currentState = " " //TODO what is this??
-            }
+
+            //send current state to the new observer
+            parseWorkspace@ObserverUtils()(workspace)
+           
         }]
 
         [removeObserver(removeRequest)(observerStatus) {
