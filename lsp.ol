@@ -1150,6 +1150,7 @@ type ServerCapabilities {
 	documentHighlightProvider?: bool
 	documentSymbolProvider?: bool
 	codeActionProvider?: bool | CodeActionOptions
+	codeLensProvider?: CodeLensOptions
 	documentFormattingProvider?: bool
 	documentRangeFormattingProvider?: bool
 	documentOnTypeFormattingProvider?: DocumentOnTypeFormattingOptions
