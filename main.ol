@@ -30,12 +30,17 @@ from .internal.workspace import Workspace
 from .internal.utils import Utils
 from .internal.inspection-utils import InspectionUtils
 from .internal.completionHelper import CompletionHelper
-from .lsp import GeneralInterface, ServerToClient, GlobalVariables
+from .lsp import GeneralInterface, ServerToClient, GlobalVariables, ApplyWorkspaceEditParams
 from .plugins.observer import ObserverSubject
 
 type Params {
 	location: string
 	debug?: bool
+}
+
+type range void {
+	character: int
+	line: int
 }
 
 /**
@@ -81,6 +86,7 @@ service Main(params:Params) {
 			osc.didChangeConfiguration.alias = "workspace/didChangeConfiguration"
 			osc.symbol.alias = "workspace/symbol"
 			osc.executeCommand.alias = "workspace/executeCommand"
+			osc.applyEdit.alias = "workspace/applyEdit"
 		}
 		interfaces: GeneralInterface
 		aggregates: TextDocument, Workspace
@@ -122,7 +128,7 @@ service Main(params:Params) {
 		println@Console( "Jolie Language Server started" )()
 		global.receivedShutdownReq = false
 		//we want full document sync as we build the ProgramInspector for each
-		//time we modify the document
+		//time we modify the document	
 	}
 
 	main {
@@ -175,6 +181,20 @@ service Main(params:Params) {
 			println@Console( "publishing diagnostics for " + diagnosticParams.uri )()
 			publishDiagnostics@Client( diagnosticParams )
 		}
+
+		[ applyEdit(applyWorkspaceEditParams)(applyWorkspaceEditResult) {
+			install (IOException => 
+				println@Console("caught an IOException in main applyEdit!")()
+				valueToPrettyString@StringUtils(IOException)(pretty)
+				println@Console(pretty)()
+				req << applyWorkspaceEditParams
+				applyEdit@Client(req)(applyWorkspaceEditResult)
+			)
+			println@Console( "Sending applyEdit request " + applyWorkspaceEditParams.label )()
+
+			req << applyWorkspaceEditParams
+			applyEdit@Client(req)(applyWorkspaceEditResult)
+		}]
 
 		[ cancelRequest( cancelReq ) ] {
 			println@Console( "cancelRequest received ID: " + cancelReq.id )()

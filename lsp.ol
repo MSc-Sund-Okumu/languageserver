@@ -1149,7 +1149,7 @@ type ServerCapabilities {
 	referencesProvider?: undefined //TODO see LSP specification
 	documentHighlightProvider?: bool
 	documentSymbolProvider?: bool
-	codeActionProvider?: bool
+	codeActionProvider?: bool | CodeActionOptions
 	codeLensProvider?: CodeLensOptions
 	documentFormattingProvider?: bool
 	documentRangeFormattingProvider?: bool
@@ -1312,6 +1312,42 @@ type CodeLensOptions {
 	 * Code lens has a resolve provider as well
 	 */
 	resolveProvider?: bool
+}
+type CodeAction {
+	title: string
+	kind?: CodeActionKind
+	diagnostics*: Diagnostic
+	isPreferred?: bool
+	disabled? {
+		reason: string
+	}
+	edit?: WorkspaceEdit
+	command?: Command
+	data?: undefined
+}
+
+type CodeActionOptions {
+	/*
+	 * Code Action has a resolve provider as well
+	 */
+	codeActionKinds*: CodeActionKind
+	resolveProvider?: bool
+}
+
+type CodeActionParams {
+	textDocument: TextDocumentIdentifier
+	range: Range
+	context: CodeActionContext
+}
+
+type CodeActionContext {
+	diagnostics*: Diagnostic
+	only*: CodeActionKind
+	triggerKind?: int 
+	/*
+	 *	CodeActionTriggerKind: 1 = Invoked
+	 *						   2 = Automatic
+	 */
 }
 type SignatureHelpOptions {
 	/*
@@ -1521,8 +1557,7 @@ type WillSaveTextDocumentParams {
 type WillSaveWaitUntilResponse: TextEdit | void //TextEdit[1,*]
 
 type DidSaveTextDocumentParams {
-	//textDocument: VersionedTextDocumentIdentifier
-	textDocument: TextDocumentIdentifier
+	textDocument: VersionedTextDocumentIdentifier
 	text?: string
 }
 
@@ -1924,14 +1959,101 @@ type RenameRequest {
 
 // https://microsoft.github.io/language-server-protocol/specifications/specification-3-17/#workspaceEdit
 // workspaceEdit
-/* type WorkspaceEditResponse {
-	changes? {
-		_uri*: DocumentUri {
-			_textEdit*: TextEdit
-		}
-	}
-} */
+ type WorkspaceEdit {
+	changes?: undefined //To accomplish some sort of map 
 
+		/* Descriptive Type not supported in Jolie for maps.
+		uri*: string /*DocumentUri type can't be used for some reason {
+			_*: TextEdit
+		} */
+	documentChanges*: undefined//CreateFile | RenameFile | DeleteFile | TextDocumentEdit
+	/* documentChanges? {  doesn't work but should be here
+		_* TextDocumentEdit
+	} | { 
+		_*:  CreateFile | RenameFile | DeleteFile | TextDocumentEdit
+	} */
+	changeAnnotations?: undefined 
+		/*
+		{
+		id*: string {
+			_*: ChangeAnnotation
+		}
+		*/
+	
+} 
+
+type TextDocumentEdit {
+	textDocument: OptionalVersionedTextDocumentIdentifier
+	edits*: TextEdit | AnnotatedTextEdit
+	/*
+	edits {
+		_*: TextEdit | AnnotatedTextEdit
+	}
+	*/
+}
+
+type OptionalVersionedTextDocumentIdentifier {
+	uri: DocumentUri //extended from textDocumentIdentifier
+	version: int | void
+}
+type VersionedTextDocumentIdentifier {
+	uri: DocumentUri //extended from textDocumentIdentifier
+	version: int
+}
+
+
+type AnnotatedTextEdit { 
+	//range and newText extended from TextEdit
+	range: Range 
+	newText: string
+
+	annotationId: ChangeAnnotationIdentifier
+}
+
+type ChangeAnnotationIdentifier: string
+
+type ChangeAnnotation {
+	label: string
+	needsConfirmation?: bool
+	description?: string
+}
+
+type CreateFile {
+	kind: string //= "create"
+	uri: DocumentUri
+	options?: CreateFileOptions
+	annotationId?: ChangeAnnotationIdentifier	
+}
+
+type CreateFileOptions {
+	overwrite?: bool
+	ignoreIfExists?: bool
+}
+
+type RenameFile {
+	kind: string //= "rename"
+	oldUri: DocumentUri
+	newUri: DocumentUri
+	options?: RenameFileOptions
+	annotationId?: ChangeAnnotationIdentifier
+}
+
+type RenameFileOptions {
+	overwrite?: bool
+	ignoreIfExists?: bool
+}
+
+type DeleteFile {
+	kind: string //= "delete"
+	uri: DocumentUri
+	options?: DeleteFileOptions
+	annotationId?: ChangeAnnotationIdentifier
+}
+
+type DeleteFileOptions {
+	recursive?: bool
+	ignoreIfNotExists?: bool
+}
 //should be WorkspaceEditResponse
 type RenameResponse: undefined | void
 
@@ -1954,6 +2076,9 @@ interface GlobalVariables {
 		getRootUri(void)(DocumentUri)
 }
 
+type codeActionResponse {
+	_*: Command | CodeAction
+} | void
 interface TextDocumentInterface {
 	OneWay:
 		didOpen( DidOpenTextDocumentParams ),
@@ -1968,7 +2093,8 @@ interface TextDocumentInterface {
 		documentSymbol( DocumentSymbolParams )( DocumentSymbolResult ),
 		signatureHelp( TextDocumentPositionParams )( SignatureHelpResponse ), //TODO check LSP
 		definition(TextDocumentPositionParams)(DefinitionResponse),
-		rename(RenameRequest)(RenameResponse)
+		rename(RenameRequest)(RenameResponse),
+		codeAction(CodeActionParams)(codeActionResponse)
 }
 
 interface WorkspaceInterface {
@@ -1981,9 +2107,47 @@ interface WorkspaceInterface {
 		executeCommand( ExecuteCommandParams )( ExecuteCommandResult )
 }
 
+type ApplyWorkspaceEditParams {
+	/**
+	 * An optional label of the workspace edit. This label is
+	 * presented in the user interface for example on an undo
+	 * stack to undo the workspace edit.
+	 */
+	label?: string
+	/**
+	 * The edits to apply.
+	 */
+	edit: WorkspaceEdit
+}
+
+type ApplyWorkspaceEditResult {
+	/**
+	 * Indicates whether the edit was applied or not.
+	 */
+	applied: bool
+
+	/**
+	 * An optional textual description for why the edit was not applied.
+	 * This may be used by the server for diagnostic logging or to provide
+	 * a suitable error for a request that triggered the edit.
+	 */
+	failureReason?: string
+
+	/**
+	 * Depending on the client's failure handling strategy `failedChange`
+	 * might contain the index of the change that failed. This property is
+	 * only available if the client signals a `failureHandling` strategy
+	 * in its client capabilities.
+	 */
+	failedChange?: int //uinteger
+}
+
+
 interface ServerToClient {
 	OneWay:
 		publishDiagnostics( DiagnosticParams )
+	requestResponse:
+		applyEdit(ApplyWorkspaceEditParams)(ApplyWorkspaceEditResult)
 }
 
 interface UtilsInterface {

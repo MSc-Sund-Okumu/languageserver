@@ -28,8 +28,9 @@ from string_utils import StringUtils
 from file import File
 from runtime import Runtime
 from ..inspectorJavaService.inspector import Inspector
-from ..lsp import WorkspaceInterface, GlobalVariables
+from ..lsp import WorkspaceInterface, GlobalVariables, ServerToClient
 from ..plugins.observer import ObserverInterface
+from .edit-utils import EditUtils
 from ast import Ast
 
 service Workspace {
@@ -42,6 +43,7 @@ service Workspace {
 	embed Inspector as Inspector
 	embed Runtime as Runtime
 	embed Ast as Ast 
+	embed EditUtils as EditUtils
 	
 
 	inputPort WorkspaceInput {
@@ -57,6 +59,11 @@ service Workspace {
 	outputPort ObserverInput {
 		location: "local://Plugins/Observer"
 		interfaces: ObserverInterface
+	}
+
+	outputPort LanguageClient {
+		location: "local://Client"
+		interfaces: ServerToClient
 	}
 
 	init {
@@ -90,9 +97,9 @@ service Workspace {
 		}
 
 		[ executeCommand( commandParams )( commandResult ) {
-			println@Console("executeCommand received")()
 			cmd -> commandParams.command
 			args -> commandParams.arguments
+			println@Console("executeCommand received " + cmd)()
 
 			//check if the command is for the plugin 
 			startsWithRequest = cmd
@@ -100,10 +107,32 @@ service Workspace {
 			startsWith@StringUtils(startsWithRequest)(isAddObserver)
 			startsWithRequest.prefix = "/plugin/resolveSymbol"
 			startsWith@StringUtils(startsWithRequest)(isResolveSymbol)
+			startsWithRequest.prefix = "/refactor/addInterface"
+			startsWith@StringUtils(startsWithRequest)(isAddInterface)
 			if (isAddObserver) {
 				addObserver@ObserverInput(args)(commandResult)
 			} else if (isResolveSymbol) {
 				resolveSymbol@Ast(args)(commandResult)
+			} else if (isAddInterface) {
+				/*
+					needs
+					args.label
+					args.module //uri
+					args.interfaceName
+				*/
+				addInterfaceParam << {
+					module = args.module
+    				interfaceName = args.interfaceName
+				}
+				addInterface@EditUtils(addInterfaceParam)(edit)
+
+				applyWorkspaceEditParams << {
+					label = args.label
+					edit << edit
+				}
+				applyEdit@LanguageClient(applyWorkspaceEditParams)(applyWorkspaceEditResult)
+				println@Console("applied edit succesfully? " + applyWorkspaceEditResult.applied)()
+				commandResult << applyWorkspaceEditResult
 			} else {
 				command = cmd
 				command.args = args
