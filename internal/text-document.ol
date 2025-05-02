@@ -30,6 +30,7 @@ from exec import Exec
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import TextDocumentInterface, UtilsInterface, CompletionHelperInterface, InspectionUtilsInterface, GlobalVariables
 from ..plugins.observer import ObserverInterface
+//from .code-actions import CodeActions
 
 constants {
 	INTEGER_MAX_VALUE = 2147483647,
@@ -74,6 +75,7 @@ service TextDocument {
 	embed Runtime as Runtime
 	embed Inspector as Inspector
 	embed File as File
+	//embed CodeActions as CodeActions
 
 	inputPort TextDocumentInput {
 		location: "local"
@@ -563,5 +565,146 @@ service TextDocument {
 				}
 			}
 		}]
+		[ codeAction( codeActionParams )(codeActionResponse) {
+			println@Console( "codeAction received")()
+			valueToPrettyString@StringUtils( codeActionParams )( CodeActionParams_string )
+			println@Console("Code Action Params: " + CodeActionParams_string)()
+			
+			thisFile -> codeActionParams.textDocument.uri
+			
+			valueToPrettyString@StringUtils( thisFile )( thisFile_string )
+			println@Console("Code Action Params thisFile: " + thisFile_string)()
+			thisRange -> codeActionParams.range
+			valueToPrettyString@StringUtils( thisRange )( thisRange_string )
+			println@Console("Code Action Params thisFile: " + thisRange_string)()
+
+			testAnnotationId = new
+			
+			codeActionResponse._[0] << {
+				title = "test action"
+				kind = "quickfix"
+				//isPreferred = false
+				//disabled << {
+				//	reason = "BOT DIFF"
+				//}
+				/*
+				command << {
+					title = "test command"
+					command = "touch"
+					arguments[0] = "/tmp/uwu"
+				}
+				*/
+
+				edit << {
+					/*
+					changes.(thisFile)[0] << {
+							range << thisRange
+							newText = "\n\nservice TestService {\n}"
+						}
+					changes.(thisFile)[1] << {
+							range << {
+								start << {
+									line = 0
+									character = 0
+								}
+								end << {
+									line = 0
+									character = 0
+								}
+							}
+							newText = ""
+						}
+					} 
+					*/
+					documentChanges[0] << {
+						textDocument << {
+							uri = thisFile
+							version = void
+						}
+						edits[0] << {
+							range << thisRange
+							newText = "\n\nservice Service {\n}"
+							annotationId = testAnnotationId
+						}
+						edits[1] << {
+							range << {
+								start << {
+									line = 0
+									character = 0
+								}
+								end << {
+									line = 0
+									character = 0
+								}
+							}
+							newText = ""
+						}
+					}
+					
+					
+					changeAnnotations.(testAnnotationId) << {
+						label = "Bot DIFF"
+						needsConfirmation = true
+						description = "This is the time in a normal day when you meet Gumayusi in bot lane and get diffed very hard"
+					}
+					
+				}
+			}
+
+				/*
+					type WorkspaceEdit {
+						changes? {
+							uri*: string DocumentUri type can't be used for some reason {
+								_*: TextEdit
+							}
+						}
+						documentChanges? {  doesn't work but should be here
+							_* TextDocumentEdit
+						} | { 
+							_*:  CreateFile | RenameFile | DeleteFile | TextDocumentEdit
+						}
+						changeAnnotations? {
+							id*: string {
+								_*: ChangeAnnotation
+							}
+						}
+					}
+					
+			}
+			*/
+
+			/*
+			inspectionReq << {
+				filename = "/home/anders/thesis/vscode-jolie/node_modules/@jolie/languageserver/internal/text-document"
+				//source = request.text
+				//includePaths[0] = jHome + fs + "include"
+				//includePaths[1] = documentPath
+			}
+			
+			println@Console("Trying to run inspectFile")()
+			inspectFile@Inspector( inspectionReq )( inspectionRes )
+			valueToPrettyString@StringUtils(inspectionRes)(pretty)
+			println@Console("inpect file response: " + pretty)()
+			*/
+
+			
+			//codeActionResponse = "uwu"
+			valueToPrettyString@StringUtils( codeActionResponse )( codeActionResponse_string )
+			println@Console("Code Action Response: " + codeActionResponse_string)()
+			/*
+			type CodeAction {
+			title: string
+			kind?: CodeActionKind
+			diagnostics*: Diagnostic
+			isPreferred?: bool
+			disabled? {
+				reason: string
+			}
+			edit?: undefined //TODO FIX THIS!!!!!
+			command?: Command
+			data?: undefined
+		} 
+		*/
+		} ]
 	}
 }
