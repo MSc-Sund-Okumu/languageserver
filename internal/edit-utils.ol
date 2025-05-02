@@ -1,3 +1,4 @@
+from ast import Ast
 from ..lsp import WorkspaceEdit, Range, Location
 
 type AddInterfaceParam {
@@ -10,67 +11,43 @@ type IsInsideParam {
     outer: Range | Location
 }
 
+type DisembedParam {
+    module: string
+    portName: string 
+    range: Range
+
+}
+
 interface EditUtilsInter {
     requestResponse:
-        addInterface(void)(WorkspaceEdit)
-        isInside(IsInsideParam)(bool)
+        addInterface(AddInterfaceParam)(WorkspaceEdit),
+        isInside(IsInsideParam)(bool),
+        disembed(DisembedParam)(WorkspaceEdit)
 }
 
 service EditUtils {
     execution: concurrent
+    embed Ast as Ast
+    
     inputPort Input {
         location: "local"
         interfaces: EditUtilsInter
     }
+
     main {
-        [addInterface(addInterfaceParam)(edit) {
-            beginningOfFile << {
-                line = 0
-                character = 0
-			}
-			beginningRange << {
-                start << beginningOfFile
-                end << beginningOfFile
-			}
-            annotationId = new
-            edit << {
-                documentChanges[0] << {
-                    textDocument << {
-                        uri = addInterfaceParam.module
-                        //version = void
-                    }
-                    edits[0] << {
-                        range << beginningRange
-                        newText = "interface " + addInterfaceParam.interfaceName + " {\n}"
-                        annotationId = annotationId
-                    }
-                    //dummy edit to force jolie to make edits a json list
-                    edits[1] << {
-                        range << beginningRange
-                        newText = ""
-                    }
-                }
-                changeAnnotations.(annotationId) << {
-                    label = "Create new interface"
-                    needsConfirmation = false
-                    description = "Create a new empty interface at the top of the module"
-                }
-            }
-        }]
 
         [isInside(request)(result) {
-            outer <- request.outer
-            inner <- request.inner
+            outer -> request.outer
+            inner -> request.inner
 
             if(inner instanceof Location && !(outer instanceof Location)) {
-                throw "inner and outer must be the same type"
+                throw TypeMismatch
             }
             validURI = true
             if(inner instanceof Location) {
                 if(inner.uri == outer.uri) {
-                    //hope you can reassign like this
-                    outer <- request.outer.range
-                    inner <- request.inner.range
+                    outer -> request.outer.range
+                    inner -> request.inner.range
                 } else {
                     validURI = false
                 }
@@ -101,8 +78,51 @@ service EditUtils {
             result = validLine && validChar && validURI
         }]
 
-        /*
+        [addInterface(addInterfaceParam)(edit) {
+            beginningOfFile << {
+                line = 0
+                character = 0
+			}
+			beginningRange << {
+                start << beginningOfFile
+                end << beginningOfFile
+			}
+            annotationId = new
+            edit << {
+                documentChanges[0] << {
+                    textDocument << {
+                        uri = addInterfaceParam.module
+                        version = void //This must be here
+                    }
+                    edits[0] << {
+                        range << beginningRange
+                        newText = "interface " + addInterfaceParam.interfaceName + " {\n}\n"
+                        annotationId = annotationId
+                    }
+                    //dummy edit to force jolie to make edits a json list
+                    edits[1] << {
+                        range << beginningRange
+                        newText = ""
+                    }
+                }
+                changeAnnotations.(annotationId) << {
+                    label = "Create new interface"
+                    needsConfirmation = false
+                    description = "Create a new empty interface at the top of the module"
+                }
+            }
+        }]
+
+        
         [disembed(disembedParam)(edit) {
+            /*
+                module
+                range
+                serviceInterface
+                serviceName
+            */
+
+            // TODO maybe just parse AST here instead of textDocument
             beginningOfFile << {
                 line = 0
                 character = 0
@@ -112,20 +132,22 @@ service EditUtils {
                 end << beginningOfFile
 			}
 
+            newProtocol = "http" 
+            annotationId = new
             edit << {
                 documentChanges[0] << {
                     textDocument << {
                         uri = disembedParam.module
-                        //version = void
+                        version = void
                     }
                     edits[0] << {
                         range << disembedParam.range
-                        newText = "outputPort {" 
-                        + "//location: insert the location to the disembedded service here\n"
-                        + "interfaces: " + serviceInterface + "\n"
-                        + "protocol: " + newProtocol + "\n"
-                        + "}" 
-                        annotationId = new
+                        newText = "outputPort " + disembedParam.portName + " {\n" 
+                        + "\t\t//location: insert the location to the disembedded service here\n"
+                        + "\t\tinterfaces: " + serviceInterface + "\n"
+                        + "\t\tprotocol: " + newProtocol + "\n"
+                        + "\t}\n" 
+                        annotationId = annotationId
                     }
                     
                     edits[1] << {
@@ -136,10 +158,10 @@ service EditUtils {
                 changeAnnotations.(annotationId) << {
                     label = "Disembed an embedded service"
                     needsConfirmation = false
-                    description = ""
+                    description = "test"
                 }
             }
         }]
-        */
+        
     }
 }

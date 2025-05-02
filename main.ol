@@ -157,12 +157,12 @@ service Main(params:Params) {
 				//experimental;
 				workspaceSymbolProvider = true
 				executeCommandProvider << {
-					commands[0] = "touch"
+					commands[0] = "touch" //TODO REMOVE
 				}
 				renameProvider = true
 				codeActionProvider << {
-					codeActionKinds[0] = "refactor"
-					resolveProvider = true
+					codeActionKinds[0] = "refactor" //TODO do we need to enumerate them?
+					resolveProvider = true //TODO false?
 				}
 			}
 		}]

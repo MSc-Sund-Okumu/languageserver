@@ -27,9 +27,11 @@ from string_utils import StringUtils
 from runtime import Runtime
 from file import File
 from exec import Exec
+from ast import Ast
 from ..inspectorJavaService.inspector import Inspector
 from ..lsp import TextDocumentInterface, UtilsInterface, CompletionHelperInterface, InspectionUtilsInterface, GlobalVariables
 from ..plugins.observer import ObserverInterface
+from .edit-utils import EditUtils
 //from .code-actions import CodeActions
 
 constants {
@@ -76,6 +78,9 @@ service TextDocument {
 	embed Inspector as Inspector
 	embed File as File
 	//embed CodeActions as CodeActions
+	embed EditUtils as EditUtils
+	embed Ast as Ast 
+
 
 	inputPort TextDocumentInput {
 		location: "local"
@@ -596,7 +601,7 @@ service TextDocument {
 				*/
 
 				edit << {
-					/*
+					/* DON'T TRY TO USE "changes", IT WILL WASTE YOUR TIME
 					changes.(thisFile)[0] << {
 							range << thisRange
 							newText = "\n\nservice TestService {\n}"
@@ -626,6 +631,7 @@ service TextDocument {
 							newText = "\n\nservice Service {\n}"
 							annotationId = testAnnotationId
 						}
+						
 						edits[1] << {
 							range << {
 								start << {
@@ -639,6 +645,7 @@ service TextDocument {
 							}
 							newText = ""
 						}
+						
 					}
 					
 					
@@ -650,6 +657,65 @@ service TextDocument {
 					
 				}
 			}
+			//add interface
+			addInterfaceParam << {
+				module = thisFile
+    			interfaceName = "newInterface"
+			}
+			addInterface@EditUtils(addInterfaceParam)(addInterfaceResponse)
+			
+			codeActionResponse._[1] << {
+				title = "Add new interface"
+				kind = "refactor"
+				edit << addInterfaceResponse
+			}
+			
+
+			scope( parsable_scope) {
+				install( CodeCheckException => 
+					println@Console("failed to parse Jolie file, skipping code actions that require having the AST")()
+				)
+				// if inside a embed as, then create a disembed codeaction
+				parseModule@Ast(thisFile)(ast)
+				for(serviceDef in ast.services) {
+					for(embedding in serviceDef.embeddings){
+						//does our selection include an embed statement?
+						isInsideRequest << {
+							outer << thisRange
+							inner << embedding.textLocation.range
+						}
+						isInside@EditUtils(isInsideRequest)(includesEmbedding)
+						//is our selection inside an embed statement?
+						isInsideRequest << {
+							inner << thisRange
+							outer << embedding.textLocation.range
+						}
+						isInside@EditUtils(isInsideRequest)(isInsideEmbedding)
+
+						if(includesEmbedding || isInsideEmbedding) {
+							println@Console("inside embedding of " + embedding.embeddedService)()
+							if(is_defined(embedding.outputPort)) {
+								portName = embedding.outputPort
+							} else {
+								portName = embedding.embeddedService
+							}
+							disembedRequest << {
+								module = thisFile
+								portName = portName
+								range << embedding.textLocation.range
+							}
+							disembed@EditUtils(disembedRequest)(disembedResponse)
+							codeActionResponse._[#codeActionResponse._] << {
+								title = "Disembed " + embedding.embeddedService
+								kind = "refactor"
+								edit << disembedResponse
+							}
+						}
+					}
+				}
+			}
+			
+			
 
 				/*
 					type WorkspaceEdit {
