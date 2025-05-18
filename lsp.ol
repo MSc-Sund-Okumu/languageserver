@@ -1557,7 +1557,7 @@ type WillSaveTextDocumentParams {
 type WillSaveWaitUntilResponse: TextEdit | void //TextEdit[1,*]
 
 type DidSaveTextDocumentParams {
-	textDocument: VersionedTextDocumentIdentifier
+	textDocument: OptionalVersionedTextDocumentIdentifier
 	text?: string
 }
 
@@ -1994,7 +1994,7 @@ type TextDocumentEdit {
 
 type OptionalVersionedTextDocumentIdentifier {
 	uri: DocumentUri //extended from textDocumentIdentifier
-	version: int | void
+	version?: int
 }
 type VersionedTextDocumentIdentifier {
 	uri: DocumentUri //extended from textDocumentIdentifier

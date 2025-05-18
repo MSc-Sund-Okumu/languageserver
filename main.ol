@@ -191,16 +191,17 @@ service Main(params:Params) {
 		}
 
 		[ applyEdit(applyWorkspaceEditParams)(applyWorkspaceEditResult) {
+            /*
 			install (IOException => 
 				println@Console("caught an IOException in main applyEdit!")()
 				valueToPrettyString@StringUtils(IOException)(pretty)
 				println@Console(pretty)()
-				req << applyWorkspaceEditParams
-				applyEdit@Client(req)(applyWorkspaceEditResult)
 			)
+            */
 			println@Console( "Sending applyEdit request " + applyWorkspaceEditParams.label )()
 
 			req << applyWorkspaceEditParams
+            //The following will trigger an IOException
 			applyEdit@Client(req)(applyWorkspaceEditResult)
 		}]
 
