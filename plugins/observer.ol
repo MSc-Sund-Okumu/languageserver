@@ -112,7 +112,7 @@ service ObserverSubject {
            
         }]
 
-        [removeObserver(removeRequest)(observerStatus) {
+        [removeObserver(removeRequest)] {
             locationStringToRemove = removeRequest.locationString
             println@Console("inside removeObserver,")()
 
@@ -132,13 +132,9 @@ service ObserverSubject {
             println@Console("observers " + global.observers)()
 
             global.observers << newObservers
-            observerStatus << {
-                status = 42 //TODO what is this??
-                message = "removed Observer" 
-                currentState = " " //TODO what is this??
-            }
+           
 
-        }]
+        }
 
     }
 

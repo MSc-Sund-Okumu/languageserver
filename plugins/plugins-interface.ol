@@ -48,15 +48,6 @@ type WorkspaceModule {
     }
 }
 
-type ObserverStatus {
-    status: int
-    message: string
-    currentState: string //TODO change this
-}
-
-type WorkSpaceFiles {
-    fileURIs*: string 
-}
 /*
 //This is in discussion
 type NotificationMessage {
@@ -71,11 +62,11 @@ interface RefactoringsInterface {
 
 interface ObserverInterface {
     RequestResponse:
-        addObserver(Observer)(WorkspaceModule),
-        removeObserver(Observer)(ObserverStatus)
+        addObserver(Observer)(WorkspaceModule)
     OneWay:
         //sends a NotificationMessage of to all observers
-        notify(void)
+        notify(void),
+        removeObserver(Observer)
 }
 
 interface ObserverUtilsInterface {
